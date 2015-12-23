@@ -16,13 +16,23 @@
         return $con->query($sql);
     }
     
+    function getContent($source, $type){
+        $jsonContents = utf8_decode(file_get_contents($source));
+        $jsonContents = str_replace("\n", "", $jsonContents);
+        if($type == "JSON"){
+            return $jsonContents;
+        } else if($type == "array"){
+            $contents = json_decode($jsonContents, true);
+            return $contents;
+        }
+    }
+    
     $spacesTable = ""; //PLACE TABLE NAME CONTAINING THE LIST OF SPACES HERE
     $defaultsTable = ""; //PLACE TABLE NAME CONTAINING THE DEFAULT SPACE PER USER HERE
     
-    $jsonContents = utf8_decode(file_get_contents("php://input"));
-    $jsonContents = str_replace("\n", "", $jsonContents);;
+    $jsonContents = getContent("php://input", "JSON");
+    $contents = getContent("php://input", "array");
     
-    $contents = json_decode($jsonContents, true);
     $receivedMessage = $contents["message"]["text"];
     $receivedMessage = explode (" ", $receivedMessage);
     $recipient = $contents["message"]["chat"]["id"];
@@ -33,16 +43,15 @@
             unset($receivedMessage[0]);
             $receivedMessage = implode(" ", $receivedMessage);
             
-            $json_link = databaseQuery("SELECT * FROM " . $spacesTable . " where space = '" . $receivedMessage . "'")->fetch_all();
-            if (!isset($json_link[0][0])){
+            $jsonLink = databaseQuery("SELECT * FROM " . $spacesTable . " where space = '" . $receivedMessage . "'")->fetch_all();
+            if (!isset($jsonLink[0][0])){
                 $message = $receivedMessage . " is not yet added to the list. Want to add it? Use /add <url>.";
             } else {
-                $space = $json_link[0][0];
-                $json_link = $json_link[0][1];
+                $space = $jsonLink[0][0];
+                $jsonLink = $jsonLink[0][1];
                 
-                $json = utf8_decode(file_get_contents($json_link));
-                $decodedJson = json_decode($json, true);
-                $open = $decodedJson["state"]["open"];
+                $spaceJson = getContent($jsonLink, "array");
+                $open = $spaceJson["state"]["open"];
                 
                 if ($open){
                     $openedState = "open";
@@ -56,11 +65,11 @@
             if (!isset($configuredSpace[0])){
                 $message = "Please specify the hackerspace you want to get the info for. For help, use /start or /help.";
             } else {
-                $json_link = databaseQuery("SELECT * FROM " . $spacesTable . " where space = '" . $configuredSpace[0][1] . "'")->fetch_all();
-                $space = $json_link[0][0];
-                $json_link = $json_link[0][1];
+                $jsonLink = databaseQuery("SELECT * FROM " . $spacesTable . " where space = '" . $configuredSpace[0][1] . "'")->fetch_all();
+                $space = $jsonLink[0][0];
+                $jsonLink = $jsonLink[0][1];
                 
-                $json = utf8_decode(file_get_contents($json_link));
+                $json = utf8_decode(file_get_contents($jsonLink));
                 $decodedJson = json_decode($json, true);
                 $open = $decodedJson["state"]["open"];
                 if ($open){
