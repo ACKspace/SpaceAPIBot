@@ -3,7 +3,7 @@
         $token = ""; //PLACE BOT TOKEN HERE
         $apiWebsite = "https://api.telegram.org/bot" . $token . "/";
         
-        file_get_contents($apiWebsite . "sendMessage?chat_id=" . $recipient . "&text=" . $message);
+        file_get_contents($apiWebsite . "sendMessage?disable_web_page_preview=1&chat_id=" . $recipient . "&text=" . $message);
     }
     
     function databaseQuery($sql){
