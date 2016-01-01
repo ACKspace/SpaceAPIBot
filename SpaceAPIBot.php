@@ -16,23 +16,13 @@
         return $con->query($sql);
     }
     
-    function getContent($source, $type){
-        $jsonContents = utf8_decode(file_get_contents($source));
-        $jsonContents = str_replace("\n", "", $jsonContents);
-        if($type == "JSON"){
-            return $jsonContents;
-        } else if($type == "array"){
-            $contents = json_decode($jsonContents, true);
-            return $contents;
-        }
-    }
-    
     $spacesTable = ""; //PLACE TABLE NAME CONTAINING THE LIST OF SPACES HERE
     $defaultsTable = ""; //PLACE TABLE NAME CONTAINING THE DEFAULT SPACE PER USER HERE
     
-    $jsonContents = getContent("php://input", "JSON");
-    $contents = getContent("php://input", "array");
+    $jsonContents = utf8_decode(file_get_contents("php://input"));
+    $jsonContents = str_replace("\n", "", $jsonContents);;
     
+    $contents = json_decode($jsonContents, true);
     $receivedMessage = $contents["message"]["text"];
     $receivedMessage = explode (" ", $receivedMessage);
     $recipient = $contents["message"]["chat"]["id"];
@@ -43,15 +33,16 @@
             unset($receivedMessage[0]);
             $receivedMessage = implode(" ", $receivedMessage);
             
-            $jsonLink = databaseQuery("SELECT * FROM " . $spacesTable . " where space = '" . $receivedMessage . "'")->fetch_all();
-            if (!isset($jsonLink[0][0])){
+            $json_link = databaseQuery("SELECT * FROM " . $spacesTable . " where space = '" . $receivedMessage . "'")->fetch_all();
+            if (!isset($json_link[0][0])){
                 $message = $receivedMessage . " is not yet added to the list. Want to add it? Use /add <url>.";
             } else {
-                $space = $jsonLink[0][0];
-                $jsonLink = $jsonLink[0][1];
+                $space = $json_link[0][0];
+                $json_link = $json_link[0][1];
                 
-                $spaceJson = getContent($jsonLink, "array");
-                $open = $spaceJson["state"]["open"];
+                $json = utf8_decode(file_get_contents($json_link));
+                $decodedJson = json_decode($json, true);
+                $open = $decodedJson["state"]["open"];
                 
                 if ($open){
                     $openedState = "open";
@@ -65,11 +56,11 @@
             if (!isset($configuredSpace[0])){
                 $message = "Please specify the hackerspace you want to get the info for. For help, use /start or /help.";
             } else {
-                $jsonLink = databaseQuery("SELECT * FROM " . $spacesTable . " where space = '" . $configuredSpace[0][1] . "'")->fetch_all();
-                $space = $jsonLink[0][0];
-                $jsonLink = $jsonLink[0][1];
+                $json_link = databaseQuery("SELECT * FROM " . $spacesTable . " where space = '" . $configuredSpace[0][1] . "'")->fetch_all();
+                $space = $json_link[0][0];
+                $json_link = $json_link[0][1];
                 
-                $json = utf8_decode(file_get_contents($jsonLink));
+                $json = utf8_decode(file_get_contents($json_link));
                 $decodedJson = json_decode($json, true);
                 $open = $decodedJson["state"]["open"];
                 if ($open){
@@ -133,6 +124,9 @@
         sendMessage($recipient, $message);
    } else if ($command == "/start" || $command == "/help"){
         $message = urlencode("Let's get started!\n\nFirst of all, to get a list of all spaces that are available to use within this bot, use /spaces.\nIf you see a space you'd like to get the status of, use /state <space>.\nWant to set a default? Use /default <space>. You can get the status of the default space with /state.\nIf there's a space that you'd like to use this bot with, use /add <url>.\n\nFor background info about this bot, use /info.");
+        sendMessage($recipient, $message);
+    } else if ($command == "/info"){
+        $message = urlencode("This bot has been created by @stuiterveer. Shoot me a message if you'd like or visit https://stuiterveer.com/. It's okay, I won't bite!\n\nLooking for the source code for this bot? https://github.com/ACKspace/SpaceAPIBot has everything you need!");
         sendMessage($recipient, $message);
     }
 ?>
