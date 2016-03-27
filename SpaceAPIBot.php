@@ -123,10 +123,14 @@
         }
         sendMessage($recipient, $message);
    } else if ($command == "/start" || $command == "/help"){
-        $message = urlencode("Let's get started!\n\nFirst of all, to get a list of all spaces that are available to use within this bot, use /spaces.\nIf you see a space you'd like to get the status of, use /state <space>.\nWant to set a default? Use /default <space>. You can get the status of the default space with /state.\nIf there's a space that you'd like to use this bot with, use /add <url>.\n\nFor background info about this bot, use /info.");
+        $message = urlencode("Let's get started!\n\nFirst of all, to get a list of all spaces that are available to use within this bot, use /spaces.\nIf you see a space you'd like to get the status of, use /state <space>.\nWant to set a default? Use /default <space>. You can get the status of the default space with /state.\nIf there's a space that you'd like to use this bot with, use /add <url>.\n\nFor background info about this bot, use /info.\n\nDo you want to completely remove all your preferences stored by this bot? Use /purge.");
         sendMessage($recipient, $message);
     } else if ($command == "/info"){
         $message = urlencode("This bot has been created by @stuiterveer. Shoot me a message if you'd like or visit https://stuiterveer.com/. It's okay, I won't bite!\n\nLooking for the source code for this bot? https://github.com/ACKspace/SpaceAPIBot has everything you need!");
+        sendMessage($recipient, $message);
+    }  else if ($command == "/purge"){
+        databaseQuery("DELETE FROM " . $defaultsTable . " WHERE `ID` = " .  $recipient);
+        $message = "All data that's stored for your account by this bot is removed!";
         sendMessage($recipient, $message);
     }
 ?>
