@@ -21,8 +21,16 @@
     
     $jsonContents = utf8_decode(file_get_contents("php://input"));
     $jsonContents = str_replace("\n", "", $jsonContents);;
-    
     $contents = json_decode($jsonContents, true);
+    
+    //if debugging is enabled, all data received by the page is sent to $debugReceiver
+    $debugging = false;
+    $debugReceiver = 0;
+    if($debugging){
+        $debugMessage = urlencode("The following was sent:\n\n" . $jsonContents);
+        sendMessage($debugReceiver, $debugMessage);
+    }
+    
     $receivedMessage = $contents["message"]["text"];
     $receivedMessage = explode (" ", $receivedMessage);
     $recipient = $contents["message"]["chat"]["id"];
